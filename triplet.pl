@@ -1,4 +1,8 @@
 #!/usr/bin/perl
+#Input file must be FASTA format, and have only one sequence.
+#Assumes sequence is in correct reading frame.
+#Does not check if sequence is a multiple of 3.
+
 my $filename = $ARGV[0];
 
 chomp $filename;
