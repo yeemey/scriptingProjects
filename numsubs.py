@@ -38,12 +38,17 @@ for eachline in chglist:
 '''
 ***************Mark's Version***************
 '''
+def printResults(type, dict, order):
+	print "\nPrinting " + type + " counts..."
+	for k in order:
+		print type + "["+ k + "]: " + str(dict[k]) 
+	
 
 # Create
-A = {'C': 0, 'G': 0, 'T': 0}
-C = {'A': 0, 'G': 0, 'T': 0}
-G = {'A': 0, 'T': 0, 'C': 0}
-T = {'A': 0, 'G': 0, 'C': 0}
+A = {'A': 0, 'C': 0, 'G': 0, 'T': 0}
+C = {'A': 0, 'C': 0, 'G': 0, 'T': 0}
+G = {'A': 0, 'C': 0, 'G': 0, 'T': 0}
+T = {'A': 0, 'C': 0, 'G': 0, 'T': 0}
 e = re.compile("([ATCG]\s*==>\s*[ATCG]|[ATCG]\s*-->\s*[ATCG])")
 for eachline in chglist:
 	matchin = e.findall(eachline)
@@ -56,27 +61,33 @@ for eachline in chglist:
 			A[key] += 1
 		elif matchStr[0] == "C":
 			C[key] += 1
-		elif matchStr[0] == "T":
-			T[key] += 1
 		elif matchStr[0] == "G":
 			G[key] += 1
+		elif matchStr[0] == "T":
+			T[key] += 1
+order = ["A", "C", "G", "T"]
+printResults("A", A, order)
+printResults("C", C, order)
+printResults("G", G, order)
+printResults("T", T, order)
 
-print "\nPrinting A counts..."
-for k in A.keys():
-	print "A["+ k + "]: " + str(A[k])
+# print "\nPrinting A counts..."
+# for k in A.keys():
+# 	print "A["+ k + "]: " + str(A[k])
+# 	
+# print "\nPrinting C counts..."
+# for k in C.keys():
+# 	print "C["+ k + "]: " + str(C[k])
+# 
+# print "\nPrinting G counts..."	
+# for k in G.keys():
+# 	print "G["+ k + "]: " + str(G[k])
+# 	
+# print "\nPrinting T counts..."
+# for k in T.keys():
+# 	print "T["+ k + "]: " + str(T[k])
 	
-print "\nPrinting T counts..."
-for k in T.keys():
-	print "T["+ k + "]: " + str(T[k])
 
-print "\nPrinting C counts..."
-for k in C.keys():
-	print "C["+ k + "]: " + str(C[k])
-
-print "\nPrinting G counts..."	
-for k in G.keys():
-	print "G["+ k + "]: " + str(G[k])
-	
 '''
 END Mark's Version
 '''
