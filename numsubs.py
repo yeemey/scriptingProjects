@@ -91,7 +91,6 @@ printResults("T", T, order)
 '''
 END Mark's Version
 '''
-
 #Count number of ingroup changes
 
 # Achg = {'AtoC': 0, 'AtoG': 0, 'AtoT': 0}
