@@ -70,8 +70,9 @@ def run(codon, actualTaxa, actualChar):
 			extractedseqs.append(newseq)
 			j += 1
 
-		ziptaxnewseq = zip(taxalist, extractedseqs)
-		print ziptaxnewseq			
+		
+#		ziptaxnewseq = zip(taxalist, extractedseqs)
+#		print ziptaxnewseq			
 	else:
 		print "!!! Invalid codon position selected for extraction!!!"
 		print "Valid codon positions are 1, 2, 3, or 1+2. Exiting program..."
@@ -89,3 +90,11 @@ del seqlist[0]
 
 checkLength(numtaxa, numchar)
 run(codonIn, numtaxa, numchar)
+
+outfile = open('extractedCodonPositions.phy', 'w')
+outfile.write(str(numtaxa) + "  " + str(len(extractedseqs[0])) + "\n")
+k = 0
+while k < numtaxa:
+	outfile.write(taxalist[k] + "  " + extractedseqs[k] + "\n")
+	k +=1
+outfile.close()
