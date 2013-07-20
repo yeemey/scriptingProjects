@@ -1,67 +1,69 @@
-############################################################################
-## July 18, 2013                                                          ##
-## Extract first+second, or only third codon positions from PHYLIP file.  ##
-############################################################################
+######################################################################################
+## July 18, 2013                                                                    ##
+## Extract first, second, third, or first+second codon positions from PHYLIP file.  ##
+######################################################################################
 
 filename = raw_input("Enter file name: ")
-infile = open(filename, 'r')
-lines = infile.readlines()
-infile.close()
+linesIn =  open(filename, 'r').readlines()
+(open(filename,'r')).close()
 
-extractpos = raw_input("Codon positions to extract (1, 2, 3, or 1+2): ")
+codonIn = raw_input("Codon positions to extract (1, 2, 3, or 1+2): ")
 
-if extractpos is "1" or extractpos is "2" or extractpos is "3" or extractpos is "1+2":
-#Unpack all lines
-	taxalist = []
-	seqlist = []
-	for eachline in lines:
+taxalist = []
+seqlist = []
+extractedseqs = []
+
+###   Start Function Definitions   ###
+def getTaxaSeq(inputLines):
+	for eachline in inputLines:
 		taxseq = eachline.split()
 		if taxseq != []:
 			taxalist.append(taxseq[0])
 			seqlist.append(taxseq[1])
+	return None
 
-#Unpack number of taxa and characters from the first line, change type to integer
-	numtaxa = int(taxalist[0])
-	numchar = int(seqlist[0])
-	del taxalist[0]
-	del seqlist[0]
-	#print taxalist[0]
 
-#Check number of sequences
-	if numtaxa == len(taxalist):
-#Check if reported sequence length is a multiple of 3
-		if numchar % 3 == 0:
-			print "Reported length of sequences is " + str(numchar)
-			print "There should be " + str(numchar/3) + " codons in this alignment."
-#Zip taxa and sequence together in a list of tuples
-			ziptaxseq = zip(taxalist, seqlist)
-#Check length of each sequence against reported lengths
-			i = 0
-			while i < len(ziptaxseq):
-				if len(ziptaxseq[i][1]) == numchar:
-					print "Length of " + ziptaxseq[i][0] + " is " + str(len(ziptaxseq[i][1])) + ", as reported."
-				else:
-					print "Length of sequence " + ziptaxseq[i][0] + " is " + str(len(ziptaxseq[i][1])) + ", not " + str(numchar) + "!!"
-					print "Check sequence length in file. Exiting program..."
-				i += 1
-		else:
-			print "Reported length of sequences is " + str(numchar)
-			print "Not a multiple of 3! Exiting program..."
-		
-#Extract nucleotides from codon positions specified by user
-		extractedseqs = []
+def checkLength(reportedTaxa, reportedChar):
+	#Check if reported sequence length is a multiple of 3
+		if reportedChar % 3 != 0:
+			print "Reported length of sequences is " + str(reportedChar)
+			print "Not a multiple of 3!"
+			return None
+		else:	
+			if reportedTaxa == len(taxalist):
+				print "Reported taxa (" + str(reportedTaxa) + \
+				") is the same as actual taxa (" + str(len(taxalist)) + ")."
+				#Check length of each sequence against reported lengths
+				i = 0
+				while i < len(seqlist):
+					if len(seqlist[i]) == reportedChar:
+						print "Reported number of sites (" + str(reportedChar) + \
+						") is correct for sequence " + taxalist[i]
+					else:
+						print "!!! Reported number of sites (" + str(reportedChar) + \
+						") is INCORRECT for sequence " + taxalist[i] + "!!!"
+					i += 1				
+			else:
+				print "!!! Reported taxa (" + str(reportedTaxa) + \
+				") is NOT the same as actual taxa (" + str(len(taxalist)) + ")!!!"
+			return None
+
+
+def run(codon, actualTaxa, actualChar):
+	if codon == "1" or codon == "2" or codon == "3" or codon == "1+2":
+		#Extract nucleotides from codon positions specified by user
 		j = 0
-		while j < numtaxa:
+		while j < actualTaxa:
 			startpos = 0
 			newseq = ""
-			while startpos < numchar:
-				if extractpos == "1":
+			while startpos < actualChar:
+				if codon == "1":
 					newseq += seqlist[j][startpos]
-				elif extractpos == "2":
+				elif codon == "2":
 					newseq += seqlist[j][(startpos + 1)]
-				elif extractpos == "3":
+				elif codon == "3":
 					newseq += seqlist[j][(startpos + 2)]
-				elif extractpos == "1+2":
+				elif codon == "1+2":
 					newseq += seqlist[j][startpos]
 					newseq += seqlist[j][(startpos + 1)]
 				startpos += 3
@@ -69,17 +71,21 @@ if extractpos is "1" or extractpos is "2" or extractpos is "3" or extractpos is 
 			j += 1
 
 		ziptaxnewseq = zip(taxalist, extractedseqs)
-		print ziptaxnewseq
+		print ziptaxnewseq			
 	else:
-		print "Reported number of taxa is not the same as number of sequences in file!"
-		print "Exiting program..."
-else:
-	print "Invalid codon position selection for extraction!"
-	print "Valid codon positions are 1, 2, 3, or 1+2. Exiting program..."
+		print "!!! Invalid codon position selected for extraction!!!"
+		print "Valid codon positions are 1, 2, 3, or 1+2. Exiting program..."
+	return None
+
+###   End Function Definitions   ###
 
 
+getTaxaSeq(linesIn)
+# Get number of taxa and characters
+numtaxa = int(taxalist[0])
+numchar = int(seqlist[0])
+del taxalist[0]
+del seqlist[0]
 
-		
-
-		
-		
+checkLength(numtaxa, numchar)
+run(codonIn, numtaxa, numchar)
