@@ -69,10 +69,6 @@ def run(codon, actualTaxa, actualChar):
 				startpos += 3
 			extractedseqs.append(newseq)
 			j += 1
-
-		
-#		ziptaxnewseq = zip(taxalist, extractedseqs)
-#		print ziptaxnewseq			
 	else:
 		print "!!! Invalid codon position selected for extraction!!!"
 		print "Valid codon positions are 1, 2, 3, or 1+2. Exiting program..."
