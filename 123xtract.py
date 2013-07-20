@@ -91,7 +91,7 @@ del seqlist[0]
 checkLength(numtaxa, numchar)
 run(codonIn, numtaxa, numchar)
 
-outfile = open('extractedCodonPositions.phy', 'w')
+outfile = open('extractedCodon'+codonIn+'_'+filename, 'w')
 outfile.write(str(numtaxa) + "  " + str(len(extractedseqs[0])) + "\n")
 k = 0
 while k < numtaxa:
