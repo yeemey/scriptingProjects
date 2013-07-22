@@ -27,7 +27,6 @@ def checkLength(reportedTaxa, reportedChar):
 	#Check if reported sequence length is a multiple of 3
 		if reportedChar % 3 != 0:
 			print "Reported length of sequences is " + str(reportedChar)
-			print "Not a multiple of 3!"
 			return None
 		else:	
 			if reportedTaxa == len(taxalist):
@@ -52,23 +51,29 @@ def checkLength(reportedTaxa, reportedChar):
 def run(codon, actualTaxa, actualChar):
 	if codon == "1" or codon == "2" or codon == "3" or codon == "1+2":
 		#Extract nucleotides from codon positions specified by user
-		j = 0
-		while j < actualTaxa:
-			startpos = 0
-			newseq = ""
-			while startpos < actualChar:
-				if codon == "1":
-					newseq += seqlist[j][startpos]
-				elif codon == "2":
-					newseq += seqlist[j][(startpos + 1)]
-				elif codon == "3":
-					newseq += seqlist[j][(startpos + 2)]
-				elif codon == "1+2":
-					newseq += seqlist[j][startpos]
-					newseq += seqlist[j][(startpos + 1)]
-				startpos += 3
-			extractedseqs.append(newseq)
-			j += 1
+		if actualChar % 3 != 0:
+			print "Reported length of sequences is not a multiple of 3!"
+			return None
+		else:
+			j = 0
+			while j < actualTaxa:
+				startpos = 0
+				newseq = ""
+				while startpos < actualChar:
+					if codon == "1":
+						newseq += seqlist[j][startpos]
+					elif codon == "2":
+						print seqlist[j]
+						newseq += seqlist[j][(startpos + 1)]
+						print newseq
+					elif codon == "3":
+						newseq += seqlist[j][(startpos + 2)]
+					elif codon == "1+2":
+						newseq += seqlist[j][startpos]
+						newseq += seqlist[j][(startpos + 1)]
+					startpos += 3
+				extractedseqs.append(newseq)
+				j += 1
 	else:
 		print "!!! Invalid codon position selected for extraction!!!"
 		print "Valid codon positions are 1, 2, 3, or 1+2. Exiting program..."
@@ -81,6 +86,7 @@ getTaxaSeq(linesIn)
 # Get number of taxa and characters
 numtaxa = int(taxalist[0])
 numchar = int(seqlist[0])
+
 del taxalist[0]
 del seqlist[0]
 
@@ -88,9 +94,13 @@ checkLength(numtaxa, numchar)
 run(codonIn, numtaxa, numchar)
 
 outfile = open('extractedCodon'+codonIn+'_'+filename, 'w')
-outfile.write(str(numtaxa) + "  " + str(len(extractedseqs[0])) + "\n")
-k = 0
-while k < numtaxa:
-	outfile.write(taxalist[k] + "  " + extractedseqs[k] + "\n")
-	k +=1
-outfile.close()
+if len(extractedseqs) == 0:
+	outfile.write("No sequences extracted")
+	outfile.close()
+else:
+	outfile.write(str(numtaxa) + "  " + str(len(extractedseqs[0])) + "\n")
+	k = 0
+	while k < numtaxa:
+		outfile.write(taxalist[k] + "  " + extractedseqs[k] + "\n")
+		k +=1
+	outfile.close()
