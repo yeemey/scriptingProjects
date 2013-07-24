@@ -42,7 +42,6 @@ my %CTRY2code=(           ## http://www.iso.org/iso/country_codes/iso_3166_code_
  'BOTSWANA' => 'BW',
  'BOUVET ISLAND' => 'BV',
  'BRAZIL' => 'BR',
- 'BRITISH INDIAN OCEAN TERRITORY' => 'IO',
  'BRUNEI DARUSSALAM' => 'BN',
  'BULGARIA' => 'BG',
  'BURKINA FASO' => 'BF',
