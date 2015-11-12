@@ -1,0 +1,99 @@
+---
+title: "Age and Confidence in Press"
+date: "October 27, 2015"
+output:
+  html_document:
+    theme: cerulean
+---
+
+```{r echo=FALSE}
+load(url("http://bit.ly/dasi_gss_data"))
+```
+
+### Introduction:
+
+Media outlets have changed over decades, and sources of information have grown from official news agencies to blogs and podcasts that are widely accessible. This leads to questions of truthfulness in reporting, and how much trust the general American public has in the press. 
+
+My research question investigates if confidence levels in press is correlated with age of present-day Americans. It is likely that older Americans with more experience in news consumption may be more skeptical, and the younger population more gullible. On the other hand, younger Americans who have always had access to information from different perspectives may be more discerning. 
+
+### Data:
+
+This data is a subset of the General Social Survey (GSS) conducted between 1972 and 2012. GSS respondents are members of the American society who were surveyed on their backgrounds and perspectives on a range of social issues. This analysis was only done on respondents surveyed in 2012. Each case represents a respondent who indicated their level of press confidence. The respondent's age is the numerical variable, while press confidence is the ordinal, categorical variable.
+
+Since this analysis is based on retrospective data from a survey, this is an observational study. Respondents were not assigned to experimental or control populations, and so any relationships between variables cannot be used to establish causality. The age of the respondent does not explain the level of confidence in the press; it is only descriptive. Other variables besides age may explain confidence in press, such as level of education, family background, etc.
+
+The population of interest are members of the American society in 2012. The findings here can be generalized since this population was randomly sampled, and there were a total of 1,974 respondents, which is less than 10% of the population. A potential source of bias may come from whether the sampling is representative of all communities, e.g. if only English-speakers were surveyed.
+
+### Exploratory data analysis:
+
+The respective mean ages of 2012 GSS respondents were 45.76, 49.28, and 48.27 years for respondents who had a great deal, only some, and hardly any confidence in the press. This suggests that there is weak/no relationship between age and confidence in press.
+
+```{r echo=FALSE}
+agepress2012 <- subset(gss, gss$year == 2012)
+
+trust2012 <- subset(agepress2012, agepress2012$conpress == "A Great Deal" & !is.na(agepress2012$age))
+summary(trust2012$age)
+
+some.trust2012 <- subset(agepress2012, agepress2012$conpress == "Only Some" & !is.na(agepress2012$age))
+summary(some.trust2012$age)
+
+no.trust2012 <- subset(agepress2012, agepress2012$conpress == "Hardly Any" & !is.na(agepress2012$age))
+summary(no.trust2012$age)
+```
+
+### Inference:
+
+My hypothesis is that the mean age of Americans are different across the press confidence levels. The null hypothesis is that the mean ages are the same across the different levels.
+
+Since I am comparing 3 group means, I will use ANOVA with Bonferroni correction to determine if there is significant difference between the means. The corrected significance level for rejecting the null hypothesis, a*, is 0.05 / 3 = 0.0167.
+
+The number of observations in each of the groups are 119 (a great deal of confidence), 576 (only some confidence), and 612 (hardly any confidence), which is <10% of the American population, so they are likely independent of each other. The groups are also independent of each other, as respondents who have one level of confidence will not have another confidence level at the same time. 
+
+The groups also have consistent variability across all three of them. The sample distributions within each group however, are not nearly normal.
+
+```{r echo=FALSE}
+boxplot(agepress2012$age ~ agepress2012$conpress, main = "Age Distribution Based on Press Confidence Levels", ylab = "Age")
+
+par(mfrow=c(1,3))
+qqnorm(trust2012$age, main = "A Great Deal of Press Confidence")
+qqline(trust2012$age)
+
+qqnorm(some.trust2012$age, main = "Only Some Press Confidence")
+qqline(some.trust2012$age)
+
+qqnorm(no.trust2012$age, main = "Hardly Any Press Confidence")
+qqline(no.trust2012$age)
+```
+
+So, I took bootstrap samples from each of the groups to obtain group means and 95% confidence intervals (CI). The bootstrap populations are nearly normal, and the means and CI are 45.7563 +/- 3.2225 (a great deal), 49.283 +/- 1.49135 (only some), and 48.2696 +/- 1.37325 years (hardly any). The bootstrap distributions are all nearly normal, and the original sample means fall within the bootstrap 95% confidence interval. 
+
+```{r echo=FALSE}
+source("http://bit.ly/dasi_inference")
+inference(trust2012$age, type = "ci", method = "simulation", conflevel = 0.95, est = "mean", boot_method = "se")
+
+inference(some.trust2012$age, type = "ci", method = "simulation", conflevel = 0.95, est = "mean", boot_method = "se")
+
+inference(no.trust2012$age, type = "ci", method = "simulation", conflevel = 0.95, est = "mean", boot_method = "se")
+```
+
+Finally, I used the ANOVA to determine if there were significant difference between the means. Based on the significance level obtained of 0.1328, the null hypothesis that all means are equal across the confidence levels cannot be rejected.
+
+```{r echo=FALSE}
+inference(y = agepress2012$age, x = agepress2012$conpress, est = "mean", type = "ht", alternative = "greater", method = "theoretical")
+```
+
+### Conclusion:
+
+My analysis shows no difference in the mean ages of Americans who differ in their levels of confidence in the press. My original research question had been to compare press confidence levels across all the years that the GSS was conducted, but I restricted my analysis to one year after realizing that 40-year-olds in 1972 might have vastly different press confidence levels than 40-year-olds in 2012 depending on the events of the age, and the news sources. Possible future research might be to repeat the same analysis for respondents from different years.
+
+### References:
+
+Smith, Tom W., Michael Hout, and Peter V. Marsden. General Social Survey, 1972-2012 [Cumulative File]. ICPSR34802-v1. Storrs, CT: Roper Center for Public Opinion Research, University of Connecticut /Ann Arbor, MI: Inter-university Consortium for Political and Social Research [distributors], 2013-09-11. doi:10.3886/ICPSR34802.v1
+
+Persistent URL: http://doi.org/10.3886/ICPSR34802.v1
+
+### Appendix:
+
+```{r echo=FALSE}
+head(agepress2012[, c("age", "conpress")])
+```
