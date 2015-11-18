@@ -15,7 +15,7 @@ import itertools
 filepath = raw_input("Enter path to SDT matrix file: ")
 filepath2 = raw_input("Enter path to TreePuzzle distance output file: ")
 
-def getSDTid(filepath):
+def getSdtId(filepath):
     """
     Reads SDT 1.0 matrix output (filename_mat.txt) and returns list of sequence IDs.
     
@@ -39,7 +39,7 @@ def getSDTid(filepath):
                 seqid.append(eachseqid)
     return seqid
 
-def getSDTdist(filepath):
+def getSdtDist(filepath):
     """
     Reads SDT 1.0 matrix output (filename_mat.txt) and returns list of pairwise distances as float numbers. 
     
@@ -64,7 +64,7 @@ def getSDTdist(filepath):
                 sdtdist.append(1-item)
     return sdtdist    
 
-def getPUD(filepath):
+def getPud(filepath):
     """
     Calls functions getSDTid and getSDTdist and returns dictionary of pairwise sequence (tuple) keys and pairwise uncorrected distance values.
     
@@ -77,8 +77,8 @@ def getPUD(filepath):
     ::param eachseqpair:: Tuple of sequence IDs
     ::param PUDS::        Dictionary of pairwise sequence keys and uncorrected distance values, excluding pairwise comparisons of sequence with itself.
     """
-    SDTid = getSDTid(filepath)
-    SDTdist = getSDTdist(filepath) 
+    SDTid = getSdtId(filepath)
+    SDTdist = getSdtDist(filepath) 
     seqpairs = [] 
     seq1Count = 1
     while seq1Count<len(SDTid):
@@ -91,7 +91,7 @@ def getPUD(filepath):
     PUDS = dict(itertools.izip(seqpairs, SDTdist))
     return PUDS
 
-def getTPZiddist(filepath2):
+def getTpzIdDist(filepath2):
     """
     Reads Tree-Puzzle 5.2 maximum likelihood distance file (outdist.txt) and returns list of lists comprising sequence id (first element) and all pairwise distances.
     
@@ -124,7 +124,7 @@ def getTPZiddist(filepath2):
             del eachline2clean[:numseq+1]
     return seqid2
 
-def getPED(filepath2):
+def getPed(filepath2):
     """
     Calls the function getTPZiddist and returns dictionary of pairwise sequence (tuple) keys and pairwise maximum likelihood distance values. 
     
@@ -142,7 +142,7 @@ def getPED(filepath2):
     ::param PEDSinit::       Dictionary of pairwise sequence keys and evolutionary distance values.
     ::param PEDS::           Dictionary of pairwise sequence keys and evolutionary distance values, excluding pairwise comparisons of sequence with itself.
     """
-    TPZiddist = getTPZiddist(filepath2)
+    TPZiddist = getTpzIdDist(filepath2)
     TPZdistperseq = [] 
     TPZdistances = []
     seqpairs2 = []
@@ -170,7 +170,7 @@ def getPED(filepath2):
             PEDS[key] = value
     return PEDS
 
-def PUDxPEDy(filepath, filepath2):
+def PudXPedY(filepath, filepath2):
     """
     Calls the functions getPUD and getPED and returns distance values for corresponding keys in both dictionaries, as two lists packed in a tuple.
     
@@ -181,8 +181,8 @@ def PUDxPEDy(filepath, filepath2):
     ::param x::         List of evolutionary distances.
     ::param y::         List of uncorrected distances.
     """
-    PUDdict = getPUD(filepath)
-    PEDdict = getPED(filepath2)
+    PUDdict = getPud(filepath)
+    PEDdict = getPed(filepath2)
     x = []
     y = []
     for key in PUDdict.keys():
@@ -200,8 +200,8 @@ def reportDistances(filepath, filepath2):
     ::param PEDdict::   Dictionary of pairwise sequence keys and evolutionary distance values, excluding pairwise comparisons of sequence with itself.
     ::param report::    Function output written to file.        
     """
-    PUDdict = getPUD(filepath)
-    PEDdict = getPED(filepath2)
+    PUDdict = getPud(filepath)
+    PEDdict = getPed(filepath2)
     with open("PUDPED.txt", "w") as report:
         report.write("sequencePair, uncorrectedDistance, evolutionaryDistance \n")
         for key in PUDdict.keys():
@@ -213,7 +213,7 @@ reportDistances(filepath, filepath2)
 print "Pairwise distances printed to PUDPED.txt"
 
 # Output scatterplot of pairwise distances
-scatterPoints = PUDxPEDy(filepath, filepath2)
+scatterPoints = PudXPedY(filepath, filepath2)
 plt.scatter(scatterPoints[0], scatterPoints[1])
 plt.xlabel('Pairwise evolutionary distance')
 plt.ylabel('Pairwise uncorrected distance')
