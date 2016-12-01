@@ -100,29 +100,41 @@ class run_software:
                         #self.run_pear(sample_dir+fastq_f[sample_counter], sample_dir+fastq_r[sample_counter], output_dir, samples[sample_counter])
                     sample_counter += 1    
         
-    def run_breseq(self, input_dir, sample_name, output_dir, polymorphism_min = '5 ', ref_dir = '~/Projects/Low_Mapping_in_breseq/data/', ref_genome1 = 'dv.gbk', ref_genome2 = 'mp.gbk', ref_genome3 = 'megaplasma.gbk'):
+    def run_breseq(self, input_dir, sample_name, output_dir, polymorphism_min = '5 ', ref_dir = '/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/data/', ref_genome1 = 'dv.gbk', ref_genome2 = 'mp.gbk', ref_genome3 = 'megaplasma.gbk'):
         """
-        breseq usage: breseq -p -o . -r <ref_genome> --polymorphism-minimum-each-strand 5 <input_read_file>
+        breseq usage: breseq -p -o . -r <ref_genome> --polymorphism-minimum-coverage-each-strand 5 <input_read_file>
         """
         breseq_dir = output_dir + sample_name + '_breseq'
         os.mkdir(breseq_dir)
-        run_breseq_cmd = 'breseq -p -o ' + breseq_dir + " -r " + ref_dir + ref_genome1 \
-        + " -r " + ref_dir + ref_genome2 + " -r " + ref_dir + ref_genome3 \
-        + " --polymorphism-minimum-each-strand " + polymorphism_min \
-        + input_dir + sample_name + '.assembled.fastq ' \
-        + input_dir + sample_name + '.unassembled.forward.fastq ' \
-        + input_dir + sample_name + '.unassembled.reverse.fastq'
-        print(run_breseq_cmd)
-
+        ref1 = ref_dir + ref_genome1
+        ref2 = ref_dir + ref_genome2
+        ref3 = ref_dir + ref_genome3
+        reads1 = input_dir + sample_name + '.assembled.fastq'
+        reads2 = input_dir + sample_name + '.unassembled.forward.fastq'
+        reads3 = input_dir + sample_name + '.unassembled.reverse.fastq'
         
+        args = ['breseq', '-p', '-o', breseq_dir, '-r', ref1, '-r', ref2, '-r',
+                ref3, '--polymorphism-minimum-coverage-each-strand', polymorphism_min, 
+                reads1, reads2, reads3]
+        
+        rb = subprocess.Popen(args)
+        #allow breseq to be KeyboardInterrupted
+        try:
+            while rb.poll() is None:
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            rb.kill()
+            raise
+
+    def batch_run_breseq(self, reads_dir, pear_results_dir, breseq_output_dir):
+        all_samples = list(self.get_all_samples_names(reads_dir))
+        for sample in all_samples:
+            self.run_breseq(pear_results_dir, sample, breseq_output_dir)
+    
     def biopy_fastq_to_fasta(self, fastq_file, fasta_file):
         """Uses BioPython SeqIO module to convert fastq to fasta file"""
         SeqIO.convert(fastq_file, "fastq", fasta_file, "fasta")
         
-    def fastq_to_fasta(self, fastq_file, fasta_file):
-        
-        pass
-    
     def run_qblast_fasta(self, fasta_file):
         """Iterate through fasta file to individually BLAST each read"""
         for read in SeqIO.parse(fasta_file, "fasta"):
@@ -222,13 +234,5 @@ class parse_results:
     
         for read in SeqIO.parse(fasta_file, "fasta"):
             pass
-        pass
-    
-    def batch_run_pear(self, input_dir, output_dir):
-        list_all_files = os.listdir(input_dir)
-        list_all_files.sort()
-        file_counter = 0
-        while file_counter < len(list_all_files):
-            self.run_pear(list_all_files[file_counter], list_all_files[file_counter + 1], output_dir)
         pass
 '''
