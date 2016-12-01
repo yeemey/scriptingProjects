@@ -7,28 +7,137 @@ BioPython 1.68
 
 @author: ymseah
 """
-from Bio import SeqIO
+#from Bio import SeqIO
 #from Bio.Seq import Seq
-from Bio.Blast import NCBIWWW, NCBIXML
-import re
+#from Bio.Blast import NCBIWWW, NCBIXML
+import re, os, subprocess, time
 
-class analyze:
-    def fastq_to_fasta(self, fastq_file, fasta_file):
-        """Convert fastq reads to fasta format"""
-        SeqIO.convert(fastq_file, "fastq", fasta_file, "fasta")
+class run_software:
     
-    def qblast_fasta(self, fasta_file):
+    def get_sample_name(self, fastq_file):
+        """
+        Get sample names from fastq files that end in '1.fastq', '2.fastq', 
+        or '_sing.fastq'.
+        """
+        if re.search('[1-2].fastq|_[1-2].fastq|_R[1-2].fastq|_sing.fastq', fastq_file):
+            sample_name_end_index = re.search('[1-2].fastq|_[1-2].fastq|_R[1-2].fastq|_sing.fastq|__sing.fastq|_R_sing.fastq', fastq_file).start()
+            if re.search('/', fastq_file):
+                start_indices = [m.start() for m in re.finditer('/', fastq_file)]
+                start_indices.sort()
+                sample_name_start_index = start_indices[-1] + 1
+            else:
+                sample_name_start_index = 0
+            sample_name = fastq_file[sample_name_start_index:sample_name_end_index]
+            return sample_name
+        else:
+            print(fastq_file)
+            print('Input file name must end in \'_1.fastq\', \'_2.fastq\', \'_R1.fastq\', or \'_R2.fastq\'.')
+    
+    def get_all_sample_names(self, sample_dir):
+        sample_files = os.listdir(sample_dir)
+        sample_files.sort()
+        sample_names = []
+        for sample in sample_files:
+            sample_name = self.get_sample_name(sample)
+            if sample_name != None:
+                sample_names.append(sample_name)
+        return set(sample_names)
+        
+    def run_pear(self, fastq_f, fastq_r, output_dir, sample_name):
+        """
+        PEAR usage: -f <fastq_f>, -r <fastq_r> -o <output_base_name>
+        """
+        args = ['/Users/ymseah/Applications/pear-0.9.10-bin-64/./pear-0.9.10-bin-64', '-f', fastq_f, '-r', fastq_r, '-o', output_dir+sample_name]
+        rp = subprocess.Popen(args)
+        #allow PEAR to be KeyboardInterrupted
+        try:
+            while rp.poll() is None:
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            rp.kill()
+            raise
+    
+    def batch_run_pear(self, sample_dir, output_dir):
+        sample_files = os.listdir(sample_dir)
+        sample_files.sort()
+        print('Getting sample names from FASTQ file names...')
+        all_names = self.get_all_sample_names(sample_dir)
+        fastq_f = []
+        fastq_r = []
+        for name in all_names:
+            if name + '1.fastq' in sample_files:
+                fastq_f.append(name + '1.fastq')
+            elif name + '_1.fastq' in sample_files:
+                fastq_f.append(name + '_1.fastq')
+            elif name + '_R1.fastq' in sample_files:
+                fastq_f.append(name + '_R1.fastq')
+        for name in all_names:
+            if name + '2.fastq' in sample_files:
+                fastq_r.append(name + '2.fastq')
+            elif name + '_2.fastq' in sample_files:
+                fastq_r.append(name + '_2.fastq')
+            elif name + '_R2.fastq' in sample_files:
+                fastq_r.append(name + '_R2.fastq')
+        
+        fastq_f.sort()
+        fastq_r.sort()
+        samples = list(all_names)
+        samples.sort()
+        
+        #check lengths of fastq_f and fastq_r
+        if len(fastq_f) != len(fastq_r):
+            print('Missing either forward/reverse read file(s)...')
+        else:
+            print('Equal number of forward and reverse read files.')
+            #check if all samples have read files
+            if len(samples) != len(fastq_f):
+                print('Missing read files for samples...')
+            else:
+                sample_counter = 0
+                while sample_counter < len(samples):
+                    if re.search(samples[sample_counter], fastq_f[sample_counter]) and re.search(samples[sample_counter], fastq_r[sample_counter]):
+                        print('Running PEAR on ' + samples[sample_counter])
+                        #self.run_pear(sample_dir+fastq_f[sample_counter], sample_dir+fastq_r[sample_counter], output_dir, samples[sample_counter])
+                    sample_counter += 1    
+        
+    def run_breseq(self, input_dir, sample_name, output_dir, polymorphism_min = '5 ', ref_dir = '~/Projects/Low_Mapping_in_breseq/data/', ref_genome1 = 'dv.gbk', ref_genome2 = 'mp.gbk', ref_genome3 = 'megaplasma.gbk'):
+        """
+        breseq usage: breseq -p -o . -r <ref_genome> --polymorphism-minimum-each-strand 5 <input_read_file>
+        """
+        breseq_dir = output_dir + sample_name + '_breseq'
+        os.mkdir(breseq_dir)
+        run_breseq_cmd = 'breseq -p -o ' + breseq_dir + " -r " + ref_dir + ref_genome1 \
+        + " -r " + ref_dir + ref_genome2 + " -r " + ref_dir + ref_genome3 \
+        + " --polymorphism-minimum-each-strand " + polymorphism_min \
+        + input_dir + sample_name + '.assembled.fastq ' \
+        + input_dir + sample_name + '.unassembled.forward.fastq ' \
+        + input_dir + sample_name + '.unassembled.reverse.fastq'
+        print(run_breseq_cmd)
+
+        
+    def biopy_fastq_to_fasta(self, fastq_file, fasta_file):
+        """Uses BioPython SeqIO module to convert fastq to fasta file"""
+        SeqIO.convert(fastq_file, "fastq", fasta_file, "fasta")
+        
+    def fastq_to_fasta(self, fastq_file, fasta_file):
+        
+        pass
+    
+    def run_qblast_fasta(self, fasta_file):
         """Iterate through fasta file to individually BLAST each read"""
         for read in SeqIO.parse(fasta_file, "fasta"):
             result_handle = NCBIWWW.qblast("blastn", "nt", read.format("fasta"), hitlist_size=3)
             with open("my_blast.xml", "a") as blast_results:
                 blast_results.write(result_handle.read())
 
-    def blastn_remote(self, blast_path, fasta_file_path):
+    def run_blastn_remote(self, input_dir):
         """Uses BLAST+ command line to search NCBI servers
-        ./blastn -db nt -query <input_file> -out <output_file> -remote
+        blastn usage: ./blastn -db nt -query <input_file> -out <output_file> -remote
         """
+        
         pass
+
+class parse_results:
     
     def parse_blast(self, blast_out):
         """Argument: blastn output text file name
@@ -80,9 +189,9 @@ class analyze:
             for hits in other_hits:
                 outfile2.write(hits)
 
-#fastq_to_fasta("sic_M1_pear.assembled.unmatched.fastq","sic_M1_pear.assembled.unmatched.fasta")
+#biopy_fastq_to_fasta("sic_M1_pear.assembled.unmatched.fastq","sic_M1_pear.assembled.unmatched.fasta")
 #parse_blast("sic_M1_pear.assembled.unmatchedBLAST.out") 
-#qblast_fasta("sic_HA3.45_1.unmatched.fasta")
+#run_qblast_fasta("sic_HA3.45_1.unmatched.fasta")
 
 '''
     def check_adapter(fasta_file):
@@ -113,5 +222,13 @@ class analyze:
     
         for read in SeqIO.parse(fasta_file, "fasta"):
             pass
+        pass
+    
+    def batch_run_pear(self, input_dir, output_dir):
+        list_all_files = os.listdir(input_dir)
+        list_all_files.sort()
+        file_counter = 0
+        while file_counter < len(list_all_files):
+            self.run_pear(list_all_files[file_counter], list_all_files[file_counter + 1], output_dir)
         pass
 '''
