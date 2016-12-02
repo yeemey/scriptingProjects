@@ -42,7 +42,7 @@ class run_software:
             if sample_name != None:
                 sample_names.append(sample_name)
         return set(sample_names)
-        
+    
     def run_pear(self, fastq_f, fastq_r, output_dir, sample_name):
         """
         PEAR usage: -f <fastq_f>, -r <fastq_r> -o <output_base_name>
@@ -100,6 +100,14 @@ class run_software:
                         #self.run_pear(sample_dir+fastq_f[sample_counter], sample_dir+fastq_r[sample_counter], output_dir, samples[sample_counter])
                     sample_counter += 1    
         
+    def get_all_pear_samples(self, pear_output_dir):
+        pear_files = os.listdir(pear_output_dir)
+        all_pear_samples = []
+        for file in pear_files:
+            filenamesplit = file.split('.')
+            all_pear_samples.append(filenamesplit[0])
+        return set(all_pear_samples)
+        
     def run_breseq(self, input_dir, sample_name, output_dir, polymorphism_min = '5 ', ref_dir = '/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/data/', ref_genome1 = 'dv.gbk', ref_genome2 = 'mp.gbk', ref_genome3 = 'megaplasma.gbk'):
         """
         breseq usage: breseq -p -o . -r <ref_genome> --polymorphism-minimum-coverage-each-strand 5 <input_read_file>
@@ -126,8 +134,8 @@ class run_software:
             rb.kill()
             raise
 
-    def batch_run_breseq(self, reads_dir, pear_results_dir, breseq_output_dir):
-        all_samples = list(self.get_all_samples_names(reads_dir))
+    def batch_run_breseq(self, pear_results_dir, breseq_output_dir):
+        all_samples = list(self.get_all_pear_samples(pear_results_dir))
         for sample in all_samples:
             self.run_breseq(pear_results_dir, sample, breseq_output_dir)
     
