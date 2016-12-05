@@ -105,7 +105,10 @@ class run_software:
         all_pear_samples = []
         for file in pear_files:
             filenamesplit = file.split('.')
-            all_pear_samples.append(filenamesplit[0])
+            if filenamesplit[1] == 'assembled' or filenamesplit[1] == 'unassembled' or filenamesplit[1] == 'discarded':
+                all_pear_samples.append(filenamesplit[0])
+            else:
+                all_pear_samples.append(filenamesplit[0] + '.' + filenamesplit[1])
         return set(all_pear_samples)
         
     def run_breseq(self, input_dir, sample_name, output_dir, polymorphism_min = '5 ', ref_dir = '/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/data/', ref_genome1 = 'dv.gbk', ref_genome2 = 'mp.gbk', ref_genome3 = 'megaplasma.gbk'):
@@ -139,9 +142,63 @@ class run_software:
         for sample in all_samples:
             self.run_breseq(pear_results_dir, sample, breseq_output_dir)
     
+    def run_gdtools_compare(self, *samples, breseq_dir = '/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/results/breseq_results/', 
+                            ref_dir = '/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/data/', 
+                            ref_genome1 = 'dv.gbk', ref_genome2 = 'mp.gbk', ref_genome3 = 'megaplasma.gbk'):
+        """
+        Usage: gdtools COMPARE [-o annotated.html] -r reference.gbk input.1.gd [input.2.gd ... ]
+        """
+        ref1 = ref_dir + ref_genome1
+        ref2 = ref_dir + ref_genome2
+        ref3 = ref_dir + ref_genome3
+        ancestor = breseq_dir + 'sic_Ancestor_breseq/output/0.gd'
+        evo_line = samples[0]
+        evo_line = evo_line[4:]
+        evo_line_end_index = re.search('\.|-|_', evo_line).start()
+        evo_line = evo_line[:evo_line_end_index]
+        output_file = breseq_dir + 'compare/' + evo_line + '.html'
+        args = ['gdtools', 'COMPARE', '-o', output_file, '-r', ref1, '-r', ref2,'-r', ref3, ancestor]
+
+        sample_counter = 0
+        while sample_counter < len(samples):
+            gd_file = 'output.gd'
+            gd_path = breseq_dir + samples[sample_counter] + '_breseq/output/'            
+            if re.search('-15', samples[sample_counter]):
+                new_gd_filepath = gd_path + evo_line + '-100.gd'
+                os.rename(gd_path + gd_file, new_gd_filepath)                
+            elif re.search('.45', samples[sample_counter]):
+                new_gd_filepath = gd_path + evo_line + '-300.gd'
+                os.rename(gd_path + gd_file, new_gd_filepath)
+            elif re.search('-76', samples[sample_counter]):
+                new_gd_filepath = gd_path + evo_line + '-500.gd'
+                os.rename(gd_path + gd_file, new_gd_filepath)
+            elif re.search('.118', samples[sample_counter]):
+                new_gd_filepath = gd_path + evo_line + '-780.gd'
+                os.rename(gd_path + gd_file, new_gd_filepath)
+            else:
+                new_gd_filepath = gd_path + evo_line + '-1000.gd'
+                os.rename(gd_path + gd_file, new_gd_filepath)
+            args.append(new_gd_filepath)
+            sample_counter +=1
+        
+        rgc = subprocess.Popen(args)
+        #allow gdtools to be KeyboardInterrupted
+        try:
+            while rgc.poll() is None:
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            rgc.kill()
+            raise
+
+    def batch_run_gdt_compare(self):
+        pass
+    
     def biopy_fastq_to_fasta(self, fastq_file, fasta_file):
         """Uses BioPython SeqIO module to convert fastq to fasta file"""
         SeqIO.convert(fastq_file, "fastq", fasta_file, "fasta")
+    
+    def batch_fastq_to_fasta(self, fastq_file):
+        pass
         
     def run_qblast_fasta(self, fasta_file):
         """Iterate through fasta file to individually BLAST each read"""
@@ -150,11 +207,23 @@ class run_software:
             with open("my_blast.xml", "a") as blast_results:
                 blast_results.write(result_handle.read())
 
-    def run_blastn_remote(self, input_dir):
+    def run_blastn_remote(self, fasta_file, output_dir):
         """Uses BLAST+ command line to search NCBI servers
         blastn usage: ./blastn -db nt -query <input_file> -out <output_file> -remote
         """
-        
+        blast_out = output_dir + fasta_file + 'BLASTout.txt'
+        args = ['/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/bin/ncbi-blast-2.5.0+/bin/./blastn',
+                '-db', 'nt', '-query', fasta_file, '-out', blast_out, '-remote']
+        rbn = subprocess.Popen(args)
+        #allow blastn to be KeyboardInterrupted
+        try:
+            while rbn.poll() is None:
+                time.sleep(0.1)
+        except KeyboardInterrupt:
+            rbn.kill()
+            raise
+    
+    def batch_run_blastn_remote(self):
         pass
 
 class parse_results:
