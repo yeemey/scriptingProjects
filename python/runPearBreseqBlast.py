@@ -13,12 +13,11 @@ from blastUnmapped import run_software, parse_results
 import re, os, subprocess
 
 run_object = run_software()
-run_object.batch_run_pear('/Users/ymseah/scriptingProjects/python/test/', '/Users/ymseah/scriptingProjects/')
-
-
-'''
-  
-#test_object.run_breseq('/pear_output_dir/', 'Ancestor', '/Users/ymseah/scriptingProjects/python/')
-#test_object.fastq_to_fasta("sic_M1_pear.assembled.unmatched.fastq","sic_M1_pear.assembled.unmatched.fasta")
-#test_object.parse_blast("sic_M1_pear.assembled.unmatchedBLAST.out")
-'''
+#print(run_object.get_all_pear_samples('/Users/ymseah/scriptingProjects/python/test/'))
+#run_object.batch_run_pear('/opt/data/wkim-data/FilteredFastQC/'', 
+#                          'home/NETID/ymseah/Projects/Low_Mapping_in_breseq/results/20161201/')
+#run_object.batch_run_breseq('/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/results/20161202/', 
+#                            '/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/results/breseq_results/')
+#run_object.run_breseq('/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/results/20161202/',
+#                      'sic_HE3.118','/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/results/breseq_results/')
+#run_object.run_gdtools_compare('sic_HE3-15', 'sic_HE3.45', 'sic_HE3-76', 'sic_HE3-118')
