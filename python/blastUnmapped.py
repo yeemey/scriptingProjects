@@ -163,9 +163,21 @@ class run_software:
         while sample_counter < len(samples):
             gd_file = 'output.gd'
             gd_path = breseq_dir + samples[sample_counter] + '_breseq/output/'            
-            if re.search('-15', samples[sample_counter]):
+            if re.search('-13', samples[sample_counter]):
                 new_gd_filepath = gd_path + evo_line + '-100.gd'
-                os.rename(gd_path + gd_file, new_gd_filepath)                
+                os.rename(gd_path + gd_file, new_gd_filepath)
+            elif re.search('-14', samples[sample_counter]):
+                new_gd_filepath = gd_path + evo_line + '-100.gd'
+                os.rename(gd_path + gd_file, new_gd_filepath)
+            elif re.search('-15', samples[sample_counter]):
+                new_gd_filepath = gd_path + evo_line + '-100.gd'
+                os.rename(gd_path + gd_file, new_gd_filepath) 
+            elif re.search('-16', samples[sample_counter]):
+                new_gd_filepath = gd_path + evo_line + '-100.gd'
+                os.rename(gd_path + gd_file, new_gd_filepath) 
+            elif re.search('-18', samples[sample_counter]):
+                new_gd_filepath = gd_path + evo_line + '-100.gd'
+                os.rename(gd_path + gd_file, new_gd_filepath)
             elif re.search('.45', samples[sample_counter]):
                 new_gd_filepath = gd_path + evo_line + '-300.gd'
                 os.rename(gd_path + gd_file, new_gd_filepath)
@@ -190,16 +202,23 @@ class run_software:
             rgc.kill()
             raise
 
-    def batch_run_gdt_compare(self):
-        pass
-    
     def biopy_fastq_to_fasta(self, fastq_file, fasta_file):
         """Uses BioPython SeqIO module to convert fastq to fasta file"""
         SeqIO.convert(fastq_file, "fastq", fasta_file, "fasta")
-    
-    def batch_fastq_to_fasta(self, fastq_file):
-        pass
         
+    def batch_biopy_fastq_to_fasta(self, input_dir = '/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/results/breseq_results/'):
+        fastq_filepath = input_dir #+ sample_name + '_breseq/data/'
+        files = os.listdir(fastq_filepath)
+        fastq_filenames = []
+        fasta_filenames = []
+        for each in files:
+            if re.search('.unmatched.fastq', each):
+                fastq_filenames.append(each)
+        for fastq in fastq_filenames:
+            self.biopy_fastq_to_fasta(fastq_filepath + fastq, fastq_filepath + fastq[:-5] + 'fasta')
+            fasta_filenames.append(fastq[:-5] + 'fasta')
+        return fasta_filenames
+    
     def run_qblast_fasta(self, fasta_file):
         """Iterate through fasta file to individually BLAST each read"""
         for read in SeqIO.parse(fasta_file, "fasta"):
@@ -207,13 +226,13 @@ class run_software:
             with open("my_blast.xml", "a") as blast_results:
                 blast_results.write(result_handle.read())
 
-    def run_blastn_remote(self, fasta_file, output_dir):
+    def run_blastn_remote(self, input_dir, fasta_file, output_dir):
         """Uses BLAST+ command line to search NCBI servers
         blastn usage: ./blastn -db nt -query <input_file> -out <output_file> -remote
         """
         blast_out = output_dir + fasta_file + 'BLASTout.txt'
         args = ['/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/bin/ncbi-blast-2.5.0+/bin/./blastn',
-                '-db', 'nt', '-query', fasta_file, '-out', blast_out, '-remote']
+                '-db', 'nt', '-query', input_dir + fasta_file, '-out', blast_out, '-remote']
         rbn = subprocess.Popen(args)
         #allow blastn to be KeyboardInterrupted
         try:
@@ -223,8 +242,10 @@ class run_software:
             rbn.kill()
             raise
     
-    def batch_run_blastn_remote(self):
-        pass
+    def batch_run_blastn_remote(self, list_of_files, input_dir = '/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/results/blast_results/input', 
+                                blast_out_dir = '/home/NETID/ymseah/Projects/Low_Mapping_in_breseq/results/blast_results/'):
+        for fasta in fasta_filenames:
+            self.run_blastn_remote(input_dir, fasta, blast_out_dir)
 
 class parse_results:
     
@@ -281,35 +302,3 @@ class parse_results:
 #biopy_fastq_to_fasta("sic_M1_pear.assembled.unmatched.fastq","sic_M1_pear.assembled.unmatched.fasta")
 #parse_blast("sic_M1_pear.assembled.unmatchedBLAST.out") 
 #run_qblast_fasta("sic_HA3.45_1.unmatched.fasta")
-
-'''
-    def check_adapter(fasta_file):
-        i_transposase = {'read1': 'TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG', 
-                         'read2': 'GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG'}
-        i_neXT_i7v1 = {'N701': 'TAAGGCGA', 'N702': 'CGTACTAG', 
-                       'N703': 'AGGCAGAA', 'N704': 'TCCTGAGC', 
-                       'N705': 'GGACTCCT', 'N706': 'TAGGCATG', 
-                       'N707': 'CTCTCTAC', 'N708': 'CAGAGAGG',
-                       'N709': 'GCTACGCT', 'N710': 'CGAGGCTG',
-                       'N711': 'AAGAGGCA', 'N712': 'GTAGAGGA'}
-        i_neXT_i7v2 = {'N714': 'GCTCATGA', 'N715': 'ATCTCAGG',
-                       'N716': 'ACTCGCTA', 'N718': 'GGAGCTAC',
-                       'N719': 'GCGTAGTA', 'N720': 'CGGAGCCT',
-                       'N721': 'TACGCTGC', 'N722': 'ATGCGCAG',
-                       'N723': 'TAGCGCTC', 'N724': 'ACTGAGCG',
-                       'N726': 'CCTAAGAC', 'N727': 'CGATCAGT',
-                       'N728': 'TGCAGCTA', 'N729': 'TCGACGTC'}
-        i_neXT_i5v1_miseq = {'S501': 'TAGATCGC', 'S502': 'CTCTCTAT',
-                             'S503': 'TATCCTCT', 'S504': 'AGAGTAGA',
-                             'S505': 'GTAAGGAG', 'S506': 'ACTGCATA',
-                             'S507': 'AAGGAGTA', 'S508': 'CTAAGCCT'}
-        i_neXT_i5v2_miseq = {'S510': 'CGTCTAAT', 'S511': 'TCTCTCCG',
-                             'S513': 'TCGACTAG', 'S515': 'TTCTAGCT',
-                             'S516': 'CCTAGAGT', 'S517': 'GCGTAAGA',
-                             'S518': 'CTATTAAG', 'S520': 'AAGGCTAT',
-                             'S521': 'GAGCCTTA', 'S522': 'TTATGCGA'}
-    
-        for read in SeqIO.parse(fasta_file, "fasta"):
-            pass
-        pass
-'''
